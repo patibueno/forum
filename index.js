@@ -8,10 +8,16 @@ const app = express();
 
 const conn = require("./db/conn");
 
+const Opinion = require("./models/Opinion");
+const User = require("./models/User");
+
+const opinionRoutes = require("./routes/opinionsRoutes");
+const authRoutes = require("./routes/authRoutes");
+const OpnionController = require("./controllers/OpinionController");
+
 app.engine("handlebars", engine());
 app.set("view engine", "handlebars");
-app.use(express.static('public'))
-
+app.use(express.static("public"));
 app.use(express.urlencoded({ extended: true }));
 
 app.use(express.json());
@@ -19,7 +25,7 @@ app.use(express.json());
 app.use(
   session({
     name: "session",
-    secret: "super_secret",
+    secret: "nosso_secret",
     resave: false,
     saveUninitialized: false,
     store: new FileStore({
@@ -28,24 +34,25 @@ app.use(
     }),
     cookie: {
       secure: false,
-      maxAge: 360000,
-      expires: new Date(Date.now() + 360000),
+      maxAge: 3600000,
+      expires: new Date(Date.now() + 3600000),
       httpOnly: true,
     },
   })
 );
 
-app.use(flash())
+app.use(flash());
 
-app.use((req,res,next) =>{
-    if(require.session.userid){
-        res.locals.session = req.session
-    }
-    next()
-})
+app.use((req, res, next) => {
+  if (req.session.userid) {
+    res.locals.session = req.session;
+  }
+  next();
+});
 
-
-
+app.use("/opinioes", opinionRoutes);
+app.use("/", authRoutes);
+app.use("/", OpnionController.showOpinions);
 
 conn
   .sync()
